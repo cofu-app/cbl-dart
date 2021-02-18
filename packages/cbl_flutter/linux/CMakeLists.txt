@@ -18,14 +18,9 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
-set(CBL_LIBRAIRES 
-  "${CMAKE_CURRENT_LIST_DIR}/lib/libCouchbaseLiteC.so"
-  "${CMAKE_CURRENT_LIST_DIR}/lib/libCouchbaseLiteDart.so")
-
-target_link_libraries(${PLUGIN_NAME} PRIVATE ${CBL_LIBRAIRES})
-
 # List of absolute paths to libraries that should be bundled with the plugin
 set(cbl_flutter_linux_bundled_libraries
-  ${CBL_LIBRAIRES}
+  "${CMAKE_CURRENT_LIST_DIR}/lib/libCouchbaseLiteC.so"
+  "${CMAKE_CURRENT_LIST_DIR}/lib/libCouchbaseLiteDart.so"
   PARENT_SCOPE
 )
