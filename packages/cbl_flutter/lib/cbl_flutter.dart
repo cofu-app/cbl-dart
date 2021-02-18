@@ -10,7 +10,7 @@ Libraries flutterLibraries() {
       cbl: LibraryConfiguration.executable(),
       cblDart: LibraryConfiguration.executable(),
     );
-  } else if (Platform.isAndroid) {
+  } else if (Platform.isAndroid || Platform.isLinux) {
     return Libraries(
       cbl: LibraryConfiguration.dynamic('libCouchbaseLiteC'),
       cblDart: LibraryConfiguration.dynamic('libCouchbaseLiteDart'),

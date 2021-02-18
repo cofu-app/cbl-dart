@@ -29,3 +29,5 @@ flutter:
         pluginClass: CblFlutterPlugin
       macos:
         pluginClass: CblFlutterPlugin
+      linux:
+        pluginClass: CblFlutterLinuxPlugin

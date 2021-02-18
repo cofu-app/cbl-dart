@@ -41,6 +41,10 @@ function createLinksForDev() {
     cd "$projectDir/packages/cbl_e2e_tests_standalone_dart"
     rm -f lib
     ln -s "$libDir"
+
+    cd "$projectDir/packages/cbl_flutter/linux"
+    rm -f lib
+    ln -s "$libDir"
 }
 
 "$@"
