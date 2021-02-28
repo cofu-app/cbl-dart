@@ -8,13 +8,11 @@ toolsDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 nativeDir="$(cd "$toolsDir/.." && pwd)"
 projectDir="$(cd "$nativeDir/.." && pwd)"
 buildDir="$projectDir/build/linux"
-libDir="$projectDir/build/linux/lib"
-embedders=(standalone-dart flutter)
+libDir="$buildDir/lib"
 
 # === Commands ===
 
-function buildForStandaloneDart() {
-    local buildDir="$buildDir/standalone-dart"
+function buildLibs() {
     export CC=clang-10
     export CXX=clang++-10
 
@@ -25,61 +23,40 @@ function buildForStandaloneDart() {
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
         -DCMAKE_INCLUDE_PATH=/usr/lib/llvm-10 \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-        -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
-        "$nativeDir"
-
-    cmake --build "$buildDir"
-}
-
-function buildForFlutter() {
-    local buildDir="$buildDir/flutter"
-    export CC=gcc-10
-    export CXX=g++-10
-
-    cmake \
-        -B "$buildDir" \
-        -G Ninja \
-        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         "$nativeDir"
 
     cmake --build "$buildDir"
 }
 
 function copyToLib() {
-    for embedder in "${embedders[@]}"; do
-        local libDir="$buildDir/lib/$embedder"
+    mkdir -p "$libDir"
 
-        mkdir -p "$libDir"
-
-        cp \
-            "$buildDir/$embedder/cbl-dart/libCouchbaseLiteDart.so" \
-            "$buildDir/$embedder/vendor/couchbase-lite-C/libCouchbaseLiteC.so" \
-            "$libDir"
-    done
+    cp \
+        "$buildDir/cbl-dart/libCouchbaseLiteDart.so" \
+        "$buildDir/vendor/couchbase-lite-C/libCouchbaseLiteC.so" \
+        "$libDir"
 }
 
 function build() {
-    buildForStandaloneDart
-    buildForFlutter
+    buildLibs
     copyToLib
 }
 
 function createLinksForDev() {
-    for embedder in "${embedders[@]}"; do
-        local libDir="$buildDir/lib/$embedder"
+    local packages=(cbl_e2e_tests_standalone_dart cbl_flutter)
+
+    for package in "${packages[@]}"; do
         local packageDir=
 
-        case "$embedder" in
-        standalone-dart)
-            packageDir="$projectDir/packages/cbl_e2e_tests_standalone_dart"
+        case "$package" in
+        cbl_e2e_tests_standalone_dart)
+            packageDir="$projectDir/packages/$package"
             ;;
-        flutter)
-            packageDir="$projectDir/packages/cbl_flutter/linux"
+        cbl_flutter)
+            packageDir="$projectDir/packages/$package/linux"
             ;;
         *)
-            echo "Unknown embedder: $embedder"
+            echo "Unknown package: $package"
             exit 1
             ;;
         esac
