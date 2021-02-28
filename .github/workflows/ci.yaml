@@ -334,7 +334,6 @@ jobs:
           name: binaries-linux
 
       - name: Extract libraries
-        working-directory: packages/cbl_flutter_linux/linux
         run: |
           mkdir -p build/linux/lib
           tar -xzf binaries-linux.tar.gz -C build/linux/lib
@@ -349,11 +348,11 @@ jobs:
             dart-pub-cache-${{ hashFiles('**/pubspec.yaml') }}
             dart-pub-cache
 
-      - name: Setup Dart environment
-        uses: ./.github/actions/setup-dart-env
-
       - name: Install Flutter Linux dependencies
         run: sudo apt-get install ninja-build libgtk-3-dev libblkid-dev liblzma-dev
+
+      - name: Setup Dart environment
+        uses: ./.github/actions/setup-dart-env
 
       - name: Enable Flutter on Linux
         run: flutter config --enable-linux-desktop
