@@ -30,4 +30,4 @@ flutter:
       macos:
         pluginClass: CblFlutterPlugin
       linux:
-        pluginClass: CblFlutterLinuxPlugin
+        pluginClass: CblFlutterPlugin

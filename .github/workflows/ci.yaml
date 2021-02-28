@@ -85,7 +85,6 @@ jobs:
       - name: Build
         run: |
           ./native/tools/build_linux.sh build
-          ./native/tools/build_linux.sh copyToLib
           tar -czf binaries-linux.tar.gz -C build/linux/lib .
 
       - name: Upload binaries
@@ -267,10 +266,10 @@ jobs:
           name: binaries-linux
 
       - name: Extract binaries
-        working-directory: packages/cbl_e2e_tests_standalone_dart
         run: |
-          mkdir lib
-          tar -xzf ../../binaries-linux.tar.gz -C lib
+          mkdir -p build/linux/lib
+          tar -xzf binaries-linux.tar.gz -C build/linux/lib
+          ./native/tools/build_linux.sh createLinksForDev
 
       - name: Cache Dart dependencies
         uses: actions/cache@v2
@@ -320,6 +319,57 @@ jobs:
 
       - name: Run tests
         run: melos run test:standalone_dart
+
+  tests-flutter-linux:
+    name: Tests - Flutter - Linux
+    runs-on: ubuntu-20.04
+    needs: build-binaries-linux
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download binaries
+        uses: actions/download-artifact@v2
+        with:
+          name: binaries-linux
+
+      - name: Extract libraries
+        working-directory: packages/cbl_flutter_linux/linux
+        run: |
+          mkdir -p build/linux/lib
+          tar -xzf binaries-linux.tar.gz -C build/linux/lib
+          ./native/tools/build_linux.sh createLinksForDev
+
+      - name: Cache Dart dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.pub-cache
+          key: dart-pub-cache-${{ hashFiles('**/pubspec.yaml') }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            dart-pub-cache-${{ hashFiles('**/pubspec.yaml') }}
+            dart-pub-cache
+
+      - name: Setup Dart environment
+        uses: ./.github/actions/setup-dart-env
+
+      - name: Install Flutter Linux dependencies
+        run: sudo apt-get install ninja-build libgtk-3-dev libblkid-dev liblzma-dev
+
+      - name: Enable Flutter on Linux
+        run: flutter config --enable-linux-desktop
+
+      - name: Build app
+        working-directory: packages/cbl_flutter/example
+        run: flutter build linux --no-pub
+
+      - name: Run tests
+        if: false
+        working-directory: packages/cbl_flutter/example
+        run: |
+          flutter drive \
+            -d linux \
+            --driver test_driver/integration_test.dart \
+            --target integration_test/cbl_e2e_test.dart
 
   tests-flutter-ios:
     name: Tests - Flutter - iOS
@@ -376,7 +426,7 @@ jobs:
     runs-on: macos-10.15
     needs: build-binaries-apple-xcframeworks
     # Disabled because `flutter drive` ignores `--no-pub` which breaks melos setup
-    # Related issue https://github.com/flutter/flutter/issues/76446 
+    # Related issue https://github.com/flutter/flutter/issues/76446
     if: false
     env:
       CBL_FLUTTER_SKIP_INSTALL_BINARIES: true
@@ -485,50 +535,5 @@ jobs:
         run: |
           flutter drive \
             -d macos \
-            --driver test_driver/integration_test.dart \
-            --target integration_test/cbl_e2e_test.dart
-
-  tests-flutter-linux:
-    name: Tests - Flutter - Linux
-    runs-on: ubuntu-20.04
-    needs: build-binaries-linux
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Download binaries
-        uses: actions/download-artifact@v2
-        with:
-          name: binaries-linux
-
-      - name: Extract libraries
-        working-directory: packages/cbl_flutter_linux/linux
-        run: |
-          mkdir -p lib
-          tar -xzf ../../../binaries-linux.tar.gz -C lib
-
-      - name: Cache Dart dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.pub-cache
-          key: dart-pub-cache-${{ hashFiles('**/pubspec.yaml') }}-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            dart-pub-cache-${{ hashFiles('**/pubspec.yaml') }}
-            dart-pub-cache
-
-      - name: Setup Dart environment
-        uses: ./.github/actions/setup-dart-env
-
-      - name: Install Flutter Linux dependencies
-        run: sudo apt-get install ninja-build libgtk-3-dev libblkid-dev liblzma-dev
-
-      - name: Enable Flutter on Linux 
-        run: flutter config --enable-linux-desktop
-
-      - name: Run tests
-        working-directory: packages/cbl_flutter/example
-        run: | 
-          flutter drive \
-            -d linux \
             --driver test_driver/integration_test.dart \
             --target integration_test/cbl_e2e_test.dart

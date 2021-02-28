@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
-set(PROJECT_NAME "cbl_flutter_linux")
+set(PROJECT_NAME "cbl_flutter")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 # This value is used when generating builds using this plugin, so it must
 # not be changed
-set(PLUGIN_NAME "cbl_flutter_linux_plugin")
+set(PLUGIN_NAME "cbl_flutter_plugin")
 
 add_library(${PLUGIN_NAME} SHARED
-  "cbl_flutter_linux_plugin.cc"
+  "cbl_flutter_plugin.cc"
 )
 apply_standard_settings(${PLUGIN_NAME})
 set_target_properties(${PLUGIN_NAME} PROPERTIES
@@ -19,7 +19,7 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
 # List of absolute paths to libraries that should be bundled with the plugin
-set(cbl_flutter_linux_bundled_libraries
+set(cbl_flutter_bundled_libraries
   "${CMAKE_CURRENT_LIST_DIR}/lib/libCouchbaseLiteC.so"
   "${CMAKE_CURRENT_LIST_DIR}/lib/libCouchbaseLiteDart.so"
   PARENT_SCOPE
