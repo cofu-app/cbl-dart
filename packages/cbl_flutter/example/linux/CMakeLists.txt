@@ -18,7 +18,7 @@ if(FLUTTER_TARGET_PLATFORM_SYSROOT)
   set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 endif()
 
-# Required for compatibility with CoubhaseLite.
+# Required for compatibility with CouchbaseLite.
 set(CMAKE_CXX_FLAGS "-stdlib=libc++")
 
 # Configure build options.
