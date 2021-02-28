@@ -33,6 +33,8 @@ function buildForStandaloneDart() {
 
 function buildForFlutter() {
     local buildDir="$buildDir/flutter"
+    export CC=gcc-10
+    export CXX=g++-10
 
     cmake \
         -B "$buildDir" \

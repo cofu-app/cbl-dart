@@ -1,11 +1,11 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <map>
 #include <mutex>
 #include <shared_mutex>
 #include <vector>
-#include <atomic>
 
 #include "dart/dart_api_dl.h"
 
