@@ -51,7 +51,6 @@ jobs:
       - name: Build
         run: |
           ./native/tools/build_linux.sh build
-          ./native/tools/build_linux.sh copyToLib
           tar -czf binaries-linux.tar.gz -C build/linux/lib .
 
       - name: Upload binaries to release

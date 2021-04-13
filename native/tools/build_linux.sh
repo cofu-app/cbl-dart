@@ -8,11 +8,11 @@ toolsDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 nativeDir="$(cd "$toolsDir/.." && pwd)"
 projectDir="$(cd "$nativeDir/.." && pwd)"
 buildDir="$projectDir/build/linux"
-libDir="$projectDir/build/linux/lib"
+libDir="$buildDir/lib"
 
 # === Commands ===
 
-function build() {
+function buildLibs() {
     export CC=clang-10
     export CXX=clang++-10
 
@@ -37,10 +37,34 @@ function copyToLib() {
         "$libDir"
 }
 
+function build() {
+    buildLibs
+    copyToLib
+}
+
 function createLinksForDev() {
-    cd "$projectDir/packages/cbl_e2e_tests_standalone_dart"
-    rm -f lib
-    ln -s "$libDir"
+    local packages=(cbl_e2e_tests_standalone_dart cbl_flutter)
+
+    for package in "${packages[@]}"; do
+        local packageDir=
+
+        case "$package" in
+        cbl_e2e_tests_standalone_dart)
+            packageDir="$projectDir/packages/$package"
+            ;;
+        cbl_flutter)
+            packageDir="$projectDir/packages/$package/linux"
+            ;;
+        *)
+            echo "Unknown package: $package"
+            exit 1
+            ;;
+        esac
+
+        cd "$packageDir"
+        rm -f lib
+        ln -s "$libDir" lib
+    done
 }
 
 "$@"

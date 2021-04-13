@@ -12,8 +12,8 @@ class FlutterCblE2eTestBinding extends CblE2eTestBinding {
   final libraries = flutterLibraries();
 
   @override
-  Future<String> resolveTmpDir() =>
-      getTemporaryDirectory().then((dir) => dir.path);
+  Future<String> resolveTmpDir() => getTemporaryDirectory()
+      .then((dir) => dir.uri.resolve('cbl_flutter_e2e_test').path);
 
   @override
   final testFn = (dynamic description, body) =>
