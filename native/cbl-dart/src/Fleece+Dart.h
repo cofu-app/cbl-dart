@@ -203,4 +203,8 @@ uint8_t CBLDart_FLEncoder_BeginDict(FLEncoder encoder, uint64_t reserveCount);
 
 CBLDART_EXPORT
 uint8_t CBLDart_FLEncoder_WriteKey(FLEncoder encoder, CBLDart_FLString key);
+
+CBLDART_EXPORT
+CBLDart_FLSliceResult CBLDart_FLEncoder_Finish(FLEncoder encoder,
+                                               FLError *errorOut);
 }

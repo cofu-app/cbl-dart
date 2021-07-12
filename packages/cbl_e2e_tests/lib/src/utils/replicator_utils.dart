@@ -39,7 +39,8 @@ extension ReplicatorUtilsExtension on Replicator {
     }
 
     final stopped = statusChanges().firstWhere((status) {
-      return status.activity == ReplicatorActivityLevel.stopped;
+      return status.error != null ||
+          status.activity == ReplicatorActivityLevel.stopped;
     });
 
     await start();

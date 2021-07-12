@@ -52,7 +52,9 @@ scripts:
     melos run test:cbl_ffi &&
     melos run test:cbl_native &&
     melos run test:standalone_dart &&
-    melos run test:flutter:macos
+    melos run test:flutter:macos &&
+    melos run test:flutter:ios &&
+    melos run test:flutter:android
 
   test:cbl:
     run: melos exec -- flutter test --no-pub -r expanded
@@ -78,6 +80,7 @@ scripts:
     run: melos exec --
       flutter test
       --no-pub
+      -r expanded
       -d macOS
       integration_test/cbl_e2e_test.dart
     select-package:
@@ -87,6 +90,7 @@ scripts:
     run: melos exec --
       flutter test
       --no-pub
+      -r expanded
       -d iPhone
       integration_test/cbl_e2e_test.dart
     select-package:
@@ -96,6 +100,7 @@ scripts:
     run: melos exec --
       flutter test
       --no-pub
+      -r expanded
       -d emulator
       integration_test/cbl_e2e_test.dart
     select-package:

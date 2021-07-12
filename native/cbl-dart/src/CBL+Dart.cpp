@@ -479,6 +479,14 @@ CBLListenerToken *CBLDart_CBLQuery_AddChangeListener(CBLQuery *query,
 
 // -- Blob
 
+CBLDart_FLString CBLDart_CBLBlob_Digest(CBLBlob *blob) {
+  return CBLDart_FLStringToDart(CBLBlob_Digest(blob));
+}
+
+CBLDart_FLString CBLDart_CBLBlob_ContentType(CBLBlob *blob) {
+  return CBLDart_FLStringToDart(CBLBlob_ContentType(blob));
+}
+
 uint64_t CBLDart_CBLBlobReader_Read(CBLBlobReadStream *stream, void *buf,
                                     uint64_t bufSize, CBLError *outError) {
   return CBLBlobReader_Read(stream, buf, static_cast<size_t>(bufSize),
@@ -613,8 +621,8 @@ CBLReplicator *CBLDart_CBLReplicator_Create(
   config_.heartbeat = config->heartbeat;
   config_.authenticator = config->authenticator;
 
+  CBLProxySettings proxy;
   if (config->proxy) {
-    CBLProxySettings proxy;
     proxy.type = config->proxy->type;
     proxy.hostname = CBLDart_FLStringFromDart(config->proxy->hostname);
     proxy.port = config->proxy->port;
