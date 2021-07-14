@@ -233,7 +233,7 @@ class _BlobReadStreamController
   }
 
   Future<void> _setup() async {
-    _streamPointer = await runNativeObjectScoped(() => worker
+    _streamPointer = await runKeepAlive(() => worker
         .execute(OpenBlobReadStream(blob.native.pointer, chunkSize))
         .then((result) => result.pointer));
   }

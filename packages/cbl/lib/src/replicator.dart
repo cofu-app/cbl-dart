@@ -23,7 +23,7 @@ Future<Replicator> createReplicator({
   required ReplicatorConfiguration config,
   required String? debugCreator,
 }) {
-  return runNativeObjectScoped(() async {
+  return runKeepAlive(() async {
     final pushFilterCallback = config.pushFilter?.let(_wrapReplicationFilter);
     final pullFilterCallback = config.pullFilter?.let(_wrapReplicationFilter);
     final conflictResolverCallback =

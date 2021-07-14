@@ -1,6 +1,7 @@
 import 'array.dart';
 import 'blob.dart';
 import 'dictionary.dart';
+import 'document.dart';
 
 /// Readonly access to the data value wrapped by a [Fragment] object.
 abstract class FragmentInterface {
@@ -99,7 +100,7 @@ class FragmentImpl implements Fragment {
       : _parent = dictionary,
         _key = key;
 
-  static final _emptyInstance = FragmentImpl._empty();
+  static final Fragment _emptyInstance = FragmentImpl._empty();
 
   dynamic _parent;
   int _index = 0;
@@ -352,4 +353,30 @@ class MutableFragmentImpl extends FragmentImpl implements MutableFragment {
   @override
   MutableFragment operator [](final Object indexOrKey) =>
       _updateSubscript(indexOrKey) ? this : _emptyInstance;
+}
+
+/// Provides access to a [Document].
+///
+/// [DocumentFragment] also provides subscript access by either key to
+/// the data values of the document which are wrapped by Fragment objects.
+abstract class DocumentFragment implements DictionaryFragment {
+  /// Whether the document exists in the database or not.
+  bool get exists;
+
+  /// The [Document] wrapped by this fragment.
+  Document? get document;
+}
+
+class DocumentFragmentImpl implements DocumentFragment {
+  DocumentFragmentImpl(this.document);
+
+  @override
+  final Document? document;
+
+  @override
+  bool get exists => document != null;
+
+  @override
+  Fragment operator [](String key) =>
+      document?[key] ?? FragmentImpl._emptyInstance;
 }

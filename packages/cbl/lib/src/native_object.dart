@@ -5,26 +5,71 @@ import 'package:cbl_ffi/cbl_ffi.dart';
 
 import 'worker/worker.dart';
 
-/// Runs [body] in a native object scope.
+/// Keeps a [NativeObject] alive while the [Function] [fn] is running.
 ///
-/// A native object scope is a [Zone], in which [NativeObject] are recorded,
-/// whose [NativeObject.pointer] property has been accessed.
+/// If [fn] returns a [Future] [object] is kept alive until the future
+/// completes.
+T keepAlive<P extends NativeType, T>(
+  NativeObject<P> object,
+  T Function(Pointer<P> pointer) fn,
+) {
+  assert(() {
+    object._debugKeepAliveRefCount++;
+    return true;
+  }());
+
+  final result = fn(object.pointer);
+
+  if (result is Future) {
+    return result.whenComplete(() {
+      assert(() {
+        object._debugKeepAliveRefCount--;
+        return true;
+      }());
+      _keepAliveUntil(object);
+    }) as T;
+  }
+
+  assert(() {
+    object._debugKeepAliveRefCount--;
+    return true;
+  }());
+  _keepAliveUntil(object);
+  return result;
+}
+
+final _keepAlive = keepAlive;
+
+extension KeepAliveExtension<P extends NativeType> on NativeObject<P> {
+  /// Keeps this [NativeObject] alive while the [Function] [fn] is running.
+  ///
+  /// If [fn] returns a [Future] this object is kept alive until the future
+  /// completes.
+  R keepAlive<R>(R Function(Pointer<P> pointer) fn) => _keepAlive(this, fn);
+}
+
+@pragma('vm:never-inline')
+void _keepAliveUntil(Object? object) {}
+
+/// Runs [body] while keeping accessed [NativeObject]s alive.
 ///
-/// When accessing [NativeObject.pointer] and using it asynchronously, the
-/// native object needs to stay alive until the asynchronous work is done. When
-/// the pointer to the native object is used in an asynchronous context, the
-/// [NativeObject] can be garbage collected too early. In this case
-/// native finalizers are executed while work is ongoing. To prevent
-/// this condition, a native object scope creates references to [NativeObject]s,
-/// whose pointers have been accessed. This keeps them from being garbage
-/// collected while asynchronous work is pending.
-T runNativeObjectScoped<T>(T Function() body) => runZoned(
+/// A native object keep alive is a [Zone], in which [NativeObject] are
+/// recorded when their [NativeObject.pointer] property has been accessed.
+///
+/// When accessing [NativeObject.pointer] and using it, the
+/// native object needs to stay alive while its pointer is being used. While
+/// the pointer to the native object is used, the [NativeObject] can be garbage
+/// collected too early. In this case native finalizers are executed while work
+/// is ongoing. To prevent this condition, a native object keep alive creates
+/// references to [NativeObject]s, whose pointers have been accessed. This keeps
+/// them from being garbage collected while their pointers are being used.
+T runKeepAlive<T>(T Function() body) => runZoned(
       body,
-      zoneValues: {#_nativeObjectScope: <NativeObject>{}},
+      zoneValues: {#_aliveNativeObjects: <NativeObject>{}},
     );
 
-Set<NativeObject>? get _nativeObjectScope =>
-    Zone.current[#_nativeObjectScope] as Set<NativeObject>?;
+Set<NativeObject>? get _aliveNativeObjects =>
+    Zone.current[#_aliveNativeObjects] as Set<NativeObject>?;
 
 /// Represents an object on the native side.
 ///
@@ -35,29 +80,34 @@ class NativeObject<T extends NativeType> {
 
   final Pointer<T> _pointer;
 
+  var _debugKeepAliveRefCount = 0;
+
   /// The pointer to the native object.
   ///
-  /// Code which access this property must be run in a [runNativeObjectScoped].
+  /// Code which access this property must be run in a
+  /// [runKeepAlive].
   Pointer<T> get pointer {
-    final nativeObjectScope = _nativeObjectScope;
+    final aliveNativeObjects = _aliveNativeObjects;
 
     assert(
-      nativeObjectScope != null,
-      'NativeObject.pointer requires a `nativeObjectScope`',
+      _debugKeepAliveRefCount > 0 || aliveNativeObjects != null,
+      'NativeObject.pointer must to be accessed from within `keepAlive` or'
+      ' `runKeepAlive`',
     );
 
-    nativeObjectScope!.add(this);
+    aliveNativeObjects?.add(this);
 
     return _pointer;
   }
 
-  /// The pointer to the native object, without requiring a native object scope.
+  /// The pointer to the native object, without requiring a native object keep
+  /// alive.
   ///
   /// Callers must guarantee that the returned pointer is only used while this
   /// object has not been garbage collected.
   ///
   /// See:
-  /// - [runNativeObjectScoped] for what a native object scope is.
+  /// - [runKeepAlive] for what a native object keep alive is.
   Pointer<T> get pointerUnsafe => _pointer;
 
   @override
@@ -78,14 +128,14 @@ mixin WorkerObject<T extends NativeType> on NativeObject<T> {
 
   /// Executes an operation of this object on [worker] and returns the result.
   ///
-  /// The call to [createRequest] is wrapped in [runNativeObjectScoped].
+  /// The call to [createRequest] is wrapped in [runKeepAlive].
   ///
   /// [createRequest] is passed the address of this object as an `int` and
   /// has to return the [WorkerRequest] to be executed.
   Future<R> execute<R>(
     FutureOr<WorkerRequest<R>> Function(Pointer<T> pointer) createRequest,
   ) =>
-      runNativeObjectScoped(() async {
+      runKeepAlive(() async {
         return worker.execute(await createRequest(pointer));
       });
 }
