@@ -81,6 +81,14 @@ void CBLDart_FLSliceResult_Release(CBLDart_FLSliceResult slice) {
 
 // -- Doc
 
+FLDoc CBLDart_FLDoc_FromResultData(CBLDart_FLSliceResult data, uint8_t trust,
+                                   FLSharedKeys sharedKeys,
+                                   CBLDart_FLSlice externalData) {
+  return FLDoc_FromResultData(CBLDart_FLSliceResultFromDart(data),
+                              (FLTrust)trust, sharedKeys,
+                              CBLDart_FLSliceFromDart(externalData));
+}
+
 FLDoc CBLDart_FLDoc_FromJSON(CBLDart_FLString json, FLError *errorOut) {
   return FLDoc_FromJSON(CBLDart_FLStringFromDart(json), errorOut);
 }

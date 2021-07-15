@@ -1,14 +1,9 @@
 
 #pragma once
 
-#ifdef __APPLE__
-#include <CouchbaseLite/CouchbaseLite.h>
-#else
-#include "cbl/CouchbaseLite.h"
-#endif
-
 #include "Callbacks.h"
 #include "Fleece+Dart.h"
+#include "cbl/CouchbaseLite.h"
 #include "cbldart_export.h"
 #include "dart/dart_api_dl.h"
 

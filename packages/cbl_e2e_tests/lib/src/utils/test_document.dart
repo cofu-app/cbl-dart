@@ -19,7 +19,7 @@ void setupTestDocument() {
 /// [testDocumentId] which has [value] in its properties.
 Matcher isTestDocument(String value) => isA<Document>()
     .having((it) => it.id, 'id', testDocumentId)
-    .having((it) => it.properties.toObject(), 'properties', {'value': value});
+    .having((it) => it.toMap(), 'toMap()', {'value': value});
 
 extension TestDocumentDatabaseExtension on Database {
   /// Writes [value] in the properties of the test document. If its does not
@@ -28,7 +28,7 @@ extension TestDocumentDatabaseExtension on Database {
     final doc =
         await getTestDocumentOrNull().then((it) => it ?? MutableDocument());
 
-    doc.properties = MutableDict({'value': value});
+    doc.setValue(value, key: 'value');
 
     final savedDoc = await saveDocument(doc);
 

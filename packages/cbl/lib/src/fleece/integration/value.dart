@@ -3,7 +3,7 @@ import '../encoder.dart';
 import 'collection.dart';
 import 'delegate.dart';
 
-MDelegate get _delegate => MDelegate.instance;
+MDelegate get _delegate => MDelegate.instance!;
 
 class MValue {
   MValue.empty() : this(null, null, hasNative: false);

@@ -8,7 +8,7 @@ import 'dict.dart';
 import 'value.dart';
 
 abstract class MDelegate {
-  static late MDelegate instance;
+  static MDelegate? instance;
 
   MCollection? collectionFromNative(Object? native);
 
@@ -55,8 +55,8 @@ class SimpleMDelegate extends MDelegate {
     } else if (flValue is CollectionFLValue) {
       cacheIt();
       return flValue.isArray
-          ? MArray.fromMValue(value, parent)
-          : MDict.fromMValue(value, parent);
+          ? MArray.asChild(value, parent)
+          : MDict.asChild(value, parent);
     }
   }
 }

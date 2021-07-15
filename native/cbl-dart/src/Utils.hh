@@ -1,10 +1,5 @@
-#ifdef __APPLE__
-#include <CouchbaseLite/Fleece.h>
-#else
-#include "fleece/Fleece.h"
-#endif
-
 #include "dart/dart_api_dl.h"
+#include "fleece/Fleece.h"
 
 /**
  * Returns the value of the given Dart CObject, wich is expected to be either an

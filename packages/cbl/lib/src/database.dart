@@ -3,11 +3,10 @@ import 'dart:ffi';
 
 import 'package:cbl_ffi/cbl_ffi.dart';
 
-import 'blob.dart';
 import 'couchbase_lite.dart';
-import 'document.dart';
+import 'document/document.dart';
 import 'errors.dart';
-import 'fleece.dart';
+import 'fleece/fleece.dart' as fl;
 import 'native_callback.dart';
 import 'native_object.dart';
 import 'query.dart';
@@ -449,7 +448,7 @@ abstract class Database with ClosableResource {
   /// many times, keep the [Query] around instead of compiling it each time. If
   /// you need to run related queries with only some values different, create
   /// one query with placeholder parameter(s), and substitute the desired
-  /// value(s) with [Query.setParameters] each time you run the query.
+  /// value(s) with [Query.parameters] each time you run the query.
   ///
   /// See:
   /// - [Query] for how to write and use queries.
@@ -473,14 +472,6 @@ abstract class Database with ClosableResource {
 
   /// Returns the names of the indexes on this database, as an array of strings.
   Future<List<String>> indexNames();
-
-  // === Blobs =================================================================
-
-  /// The [BlobManager] associated with this Database.
-  ///
-  /// See:
-  /// - [Blob] for more about what a Blob is.
-  BlobManager get blobManager;
 
   // === Replicator ============================================================
 
@@ -560,8 +551,8 @@ class DatabaseImpl extends NativeResource<WorkerObject<CBLDatabase>>
   @override
   Future<Document?> getDocument(String id) => use(() => native
       .execute((pointer) => GetDatabaseDocument(pointer, id))
-      .then((address) => address?.let((it) => createDocument(
-            pointer: it.pointer,
+      .then((address) => address?.let((it) => DocumentImpl(
+            doc: it.pointer,
             retain: false,
             debugCreator: 'Database.getDocument()',
           ))));
@@ -569,10 +560,9 @@ class DatabaseImpl extends NativeResource<WorkerObject<CBLDatabase>>
   @override
   Future<MutableDocument?> getMutableDocument(String id) => use(() => native
       .execute((pointer) => GetDatabaseMutableDocument(pointer, id))
-      .then((address) => address?.let((it) => createMutableDocument(
-            pointer: it.pointer,
+      .then((address) => address?.let((it) => MutableDocumentImpl(
+            doc: it.pointer,
             retain: false,
-            isNew: false,
             debugCreator: 'Database.getMutableDocument()',
           ))));
 
@@ -584,7 +574,10 @@ class DatabaseImpl extends NativeResource<WorkerObject<CBLDatabase>>
       use(() => native
           .execute((pointer) => SaveDatabaseDocumentWithConcurrencyControl(
                 pointer,
-                doc.native.pointer.cast(),
+                ((doc as MutableDocumentImpl)..flushProperties())
+                    .doc
+                    .pointer
+                    .cast(),
                 concurrency,
               ))
           .then((_) => getDocument(doc.id).then((it) => it!)));
@@ -595,23 +588,18 @@ class DatabaseImpl extends NativeResource<WorkerObject<CBLDatabase>>
     SaveConflictHandler conflictHandler,
   ) =>
       use(() async {
-        // Couchbase crashes when a document that has not been pulled out of the
-        // database is used with conflict resolution.
-        assert(!doc.isNew, 'new documents must be saved with `saveDocument`');
-
         final callback = NativeCallback((arguments, result) {
           final message =
               SaveDocumentResolvingCallbackMessage.fromArguments(arguments);
 
-          final documentBeingSaved = createMutableDocument(
-            pointer: message.documentBeingSaved,
+          final documentBeingSaved = MutableDocumentImpl(
+            doc: message.documentBeingSaved,
             retain: true,
-            isNew: false,
             debugCreator: 'SaveConflictHandler(documentBeingSaved)',
           );
           final conflictingDocument = message.conflictingDocument?.let(
-            (pointer) => createDocument(
-              pointer: pointer,
+            (pointer) => DocumentImpl(
+              doc: pointer,
               retain: true,
               debugCreator: 'SaveConflictHandler(conflictingDocument)',
             ),
@@ -629,6 +617,7 @@ class DatabaseImpl extends NativeResource<WorkerObject<CBLDatabase>>
                 documentBeingSaved,
                 conflictingDocument,
               );
+              documentBeingSaved.flushProperties();
             } finally {
               result!(decision);
             }
@@ -640,7 +629,10 @@ class DatabaseImpl extends NativeResource<WorkerObject<CBLDatabase>>
         await native
             .execute((pointer) => SaveDatabaseDocumentWithConflictHandler(
                   pointer,
-                  doc.native.pointer.cast(),
+                  ((doc as MutableDocumentImpl)..flushProperties())
+                      .doc
+                      .pointer
+                      .cast(),
                   callback.native.pointer,
                 ))
             .whenComplete(callback.close);
@@ -656,7 +648,7 @@ class DatabaseImpl extends NativeResource<WorkerObject<CBLDatabase>>
       use(() =>
           native.execute((pointer) => DeleteDocumentWithConcurrencyControl(
                 pointer,
-                doc.native.pointer,
+                (doc as DocumentImpl).doc.pointer,
                 concurrency,
               )));
 
@@ -732,16 +724,11 @@ class DatabaseImpl extends NativeResource<WorkerObject<CBLDatabase>>
   @override
   Future<List<String>> indexNames() async => use(() => native
       .execute((pointer) => GetDatabaseIndexNames(pointer))
-      .then((result) => Array.fromPointer(
+      .then((result) => fl.Array.fromPointer(
             result.pointer,
             release: true,
             retain: false,
           ).map((it) => it.asString!).toList()));
-
-  // === Blobs =================================================================
-
-  @override
-  late BlobManager blobManager = useSync(() => BlobManagerImpl(this));
 
   // === Replicator ============================================================
 

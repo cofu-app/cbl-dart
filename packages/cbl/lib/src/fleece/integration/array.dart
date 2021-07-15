@@ -12,17 +12,25 @@ import 'value.dart';
 class MArray extends MCollection {
   MArray()
       : _array = null,
-        _values = [],
-        super(null, isMutable: true);
+        _values = [];
 
-  MArray.fromMValue(MValue slot, MCollection parent)
+  MArray.asCopy(MArray original, {bool? isMutable})
+      : _array = original._array,
+        _values = List.of(original._values),
+        super.asCopy(original, isMutable: isMutable ?? original.isMutable);
+
+  MArray.asChild(MValue slot, MCollection parent, {bool? isMutable})
       : _array = (slot.value as CollectionFLValue).value.cast(),
         _values = List<MValue?>.filled(
           (slot.value as CollectionFLValue).length,
           null,
           growable: true,
         ),
-        super.withParent(slot, parent, isMutable: parent.hasMutableChildren);
+        super.asChild(
+          slot,
+          parent,
+          isMutable: isMutable ?? parent.hasMutableChildren,
+        );
 
   final Pointer<FLArray>? _array;
   final List<MValue?> _values;

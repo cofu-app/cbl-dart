@@ -7,7 +7,12 @@ import 'package:cbl_ffi/cbl_ffi.dart';
 import 'package:meta/meta.dart';
 
 import 'database.dart';
-import 'fleece.dart';
+import 'document/array.dart';
+import 'document/blob.dart';
+import 'document/common.dart';
+import 'document/dictionary.dart';
+import 'fleece/fleece.dart' as fl;
+import 'fleece/integration/integration.dart';
 import 'native_object.dart';
 import 'resource.dart';
 import 'streams.dart';
@@ -92,6 +97,97 @@ class JSONQuery extends QueryDefinition {
   String toString() => 'JSONQuery($queryString)';
 }
 
+/// Query parameters used for setting values to the query parameters defined in
+/// the query.
+class Parameters {
+  /// Creates new [Parameters], optionally initialized with other [parameters].
+  Parameters([Parameters? parameters]) : this._(parameters: parameters);
+
+  Parameters._({Parameters? parameters, bool readonly = false})
+      : _data = parameters?._data?.let((it) => Map.of(it)),
+        _readonly = readonly;
+
+  final bool _readonly;
+  Map<String, Object?>? _data;
+
+  /// Gets the value of the parameter referenced by the given [name].
+  Object? value(String name) => _data?[name];
+
+  /// Set a value to the query parameter referenced by the given [name].
+  ///
+  /// {@template cbl.Parameters.parameterDefinition}
+  /// TODO: describe how query parameters are defined.
+  /// {@endtemplate}
+  void setValue(Object? value, {required String name}) {
+    _checkReadonly();
+    _data ??= {};
+    _data![name] = toCblObject(value);
+  }
+
+  /// Set a [String] to the query parameter referenced by the given
+  /// [name].
+  ///
+  /// {@macro cbl.Parameters.parameterDefinition}
+  void setString(String? value, {required String name}) =>
+      setValue(value, name: name);
+
+  /// Set an integer number to the query parameter referenced by the given
+  /// [name].
+  ///
+  /// {@macro cbl.Parameters.parameterDefinition}
+  void setInteger(int? value, {required String name}) =>
+      setValue(value, name: name);
+
+  /// Set a floating point number to the query parameter referenced by the given
+  /// [name].
+  ///
+  /// {@macro cbl.Parameters.parameterDefinition}
+  void setFloat(double? value, {required String name}) =>
+      setValue(value, name: name);
+
+  /// Set a [num] to the query parameter referenced by the given [name].
+  ///
+  /// {@macro cbl.Parameters.parameterDefinition}
+  void setNumber(num? value, {required String name}) =>
+      setValue(value, name: name);
+
+  /// Set a [bool] to the query parameter referenced by the given [name].
+  ///
+  /// {@macro cbl.Parameters.parameterDefinition}
+  void setBoolean(bool? value, {required String name}) =>
+      setValue(value, name: name);
+
+  /// Set a [DateTime] to the query parameter referenced by the given [name].
+  ///
+  /// {@macro cbl.Parameters.parameterDefinition}
+  void setDate(DateTime? value, {required String name}) =>
+      setValue(value, name: name);
+
+  /// Set a [Blob] to the query parameter referenced by the given [name].
+  ///
+  /// {@macro cbl.Parameters.parameterDefinition}
+  void setBlob(Blob? value, {required String name}) =>
+      setValue(value, name: name);
+
+  /// Set an [Array]  to the query parameter referenced by the given [name].
+  ///
+  /// {@macro cbl.Parameters.parameterDefinition}
+  void setArray(Array? value, {required String name}) =>
+      setValue(value?.toList(), name: name);
+
+  /// Set a [Dictionary] to the query parameter referenced by the given [name].
+  ///
+  /// {@macro cbl.Parameters.parameterDefinition}
+  void setDictionary(Dictionary? value, {required String name}) =>
+      setValue(value?.toMap(), name: name);
+
+  void _checkReadonly() {
+    if (_readonly) {
+      throw StateError('This parameters object is readonly.');
+    }
+  }
+}
+
 /// A [Query] represents a compiled database query.
 ///
 /// {@template cbl.Query.language}
@@ -124,14 +220,14 @@ abstract class Query implements Resource {
   /// The database this query is operating on.
   Database get database;
 
-  /// Assigns values to the query's parameters.
+  /// The current values of the parameters of this [Query].
   ///
   /// These values will be substituted for those parameters whenever the query
   /// is executed, until they are next assigned.
   ///
   /// Parameters are specified in the query source as e.g. `$PARAM` (N1QL) or
-  /// `["$PARAM"]` (JSON). In this example, the assigned [Dict] should have a
-  /// key `PARAM` that maps to the value of the parameter.
+  /// `["$PARAM"]` (JSON). In this example, the assigned [Parameters] should
+  /// have a key `PARAM` that maps to the value of the parameter.
   ///
   /// ```dart
   /// final query = await db.query(N1QLQuery(
@@ -143,20 +239,10 @@ abstract class Query implements Resource {
   ///   ''',
   /// ));
   ///
-  /// await query.setParameters(MutableDict({
-  ///   'PRODUCT_ID': 'product320',
-  /// }))
+  /// query.parameters.setString('product320', name: 'PRODUCT_ID');
   /// ```
-  Future<void> setParameters(Dict parameters);
-
-  /// Gets the values assigned to this query's parameters.
-  ///
-  /// The returned Dict must only be accessed while this Query has not been
-  /// garbage collected.
-  ///
-  /// See:
-  /// - [setParameters]
-  Future<Dict?> getParameters();
+  Parameters get parameters;
+  set parameters(Parameters value);
 
   /// Runs the query, returning the results.
   Future<ResultSet> execute();
@@ -194,6 +280,8 @@ abstract class Query implements Resource {
 class QueryImpl extends NativeResource<WorkerObject<CBLQuery>>
     with DelegatingResourceMixin
     implements Query {
+  static late final _bindings = CBLBindings.instance.query;
+
   QueryImpl({
     required this.database,
     required Pointer<CBLQuery> pointer,
@@ -212,26 +300,32 @@ class QueryImpl extends NativeResource<WorkerObject<CBLQuery>>
   final DatabaseImpl database;
 
   @override
-  Future<void> setParameters(Dict parameters) =>
-      use(() => native.execute((pointer) => SetQueryParameters(
-            pointer,
-            parameters.native.pointer.cast(),
-          )));
+  Parameters get parameters => useSync(() => _parameters);
+  var _parameters = Parameters();
 
   @override
-  Future<Dict?> getParameters() => use(() => native
-      .execute((pointer) => GetQueryParameters(pointer))
-      .then((result) => result?.pointer.let((it) => Dict.fromPointer(it))));
+  set parameters(Parameters value) => useSync(() => _parameters = value);
+
+  void _flushParameters() {
+    final dict = fl.MutableDict(parameters._data);
+    runKeepAlive(() => _bindings.setParameters(
+          native.pointer,
+          dict.native.pointer.cast(),
+        ));
+  }
 
   @override
-  Future<ResultSet> execute() => use(() => native
-      .execute((pointer) => ExecuteQuery(pointer))
-      .then((result) => ResultSet._(
-            result.pointer,
-            release: true,
-            retain: false,
-            debugCreator: 'Query.execute()',
-          )));
+  Future<ResultSet> execute() => use(() {
+        _flushParameters();
+        return native
+            .execute((pointer) => ExecuteQuery(pointer))
+            .then((result) => ResultSet._(
+                  result.pointer,
+                  release: true,
+                  retain: false,
+                  debugCreator: 'Query.execute()',
+                ));
+      });
 
   @override
   Future<String> explain() =>
@@ -250,10 +344,13 @@ class QueryImpl extends NativeResource<WorkerObject<CBLQuery>>
           ResultSet, TransferablePointer<CBLListenerToken>>(
         parent: this,
         worker: native.worker,
-        createRegisterCallbackRequest: (callback) => AddQueryChangeListener(
-          native.pointerUnsafe,
-          callback.native.pointerUnsafe,
-        ),
+        createRegisterCallbackRequest: (callback) {
+          _flushParameters();
+          return AddQueryChangeListener(
+            native.pointerUnsafe,
+            callback.native.pointerUnsafe,
+          );
+        },
         createEvent: (listenerToken, _) async {
           // The native side sends no arguments. When the native side notfies
           // the listener it has to copy the current query result set.
@@ -287,13 +384,13 @@ abstract class Result {
   ///
   /// See:
   /// - [Query.columnName] for a discussion of column names.
-  Value operator [](Object keyOrIndex);
+  Object? operator [](Object keyOrIndex);
 
   /// Returns the current result as an array of column values.
   Array get array;
 
   /// Returns the current result as a dictionary mapping column names to values.
-  Dict get dict;
+  Dictionary get dictionary;
 }
 
 class _ResultSetIterator extends NativeResource<NativeObject<CBLResultSet>>
@@ -320,7 +417,7 @@ class _ResultSetIterator extends NativeResource<NativeObject<CBLResultSet>>
   }
 
   @override
-  Value operator [](Object keyOrIndex) {
+  Object? operator [](Object keyOrIndex) {
     _checkHasCurrent();
     Pointer<FLValue> pointer;
 
@@ -332,27 +429,31 @@ class _ResultSetIterator extends NativeResource<NativeObject<CBLResultSet>>
       throw ArgumentError.value(keyOrIndex, 'keyOrIndex');
     }
 
-    return Value.fromPointer(pointer);
+    return MRoot.fromValue(
+      pointer,
+      context: MContext(),
+      isMutable: false,
+    ).asNative;
   }
 
   @override
   Array get array {
     _checkHasCurrent();
-    return MutableArray.fromPointer(
+    return MRoot.fromValue(
       _bindings.resultArray(native.pointerUnsafe).cast(),
-      release: true,
-      retain: true,
-    );
+      context: MContext(),
+      isMutable: false,
+    ).asNative as Array;
   }
 
   @override
-  Dict get dict {
+  Dictionary get dictionary {
     _checkHasCurrent();
-    return MutableDict.fromPointer(
+    return MRoot.fromValue(
       _bindings.resultDict(native.pointerUnsafe).cast(),
-      release: true,
-      retain: true,
-    );
+      context: MContext(),
+      isMutable: false,
+    ).asNative as Dictionary;
   }
 
   void _checkHasCurrent() {
@@ -401,6 +502,6 @@ class ResultSet extends NativeResource<NativeObject<CBLResultSet>>
   /// All the results as [Array]s.
   Iterable<Array> get asArrays => map((result) => result.array);
 
-  /// All the results as [Dict]s.
-  Iterable<Dict> get asDicts => map((result) => result.dict);
+  /// All the results as [Dictionary]s.
+  Iterable<Dictionary> get asDictionaries => map((result) => result.dictionary);
 }

@@ -1,16 +1,28 @@
 import 'package:cbl/src/fleece/fleece.dart';
 import 'package:cbl/src/fleece/integration/integration.dart';
 
-import '../test_binding_impl.dart';
-import 'test_binding.dart';
-import 'utils/fleece_coding.dart';
-import 'utils/matchers.dart';
+import '../../test_binding_impl.dart';
+import '../test_binding.dart';
+import '../utils/fleece_coding.dart';
+import '../utils/matchers.dart';
 
 void main() {
   setupTestBinding();
 
   group('Fleece Integration', () {
-    setUpAll(() => MDelegate.instance = SimpleMDelegate());
+    // The previous delegate needs to be restored because
+    // `CouchbaseLite.initialize` is only called once for all tests, which is
+    // where the MDelegate implementation for CouchbaseList is set up.
+    MDelegate? previousDelegate;
+
+    setUpAll(() {
+      previousDelegate = MDelegate.instance;
+      MDelegate.instance = SimpleMDelegate();
+    });
+
+    tearDownAll(() {
+      MDelegate.instance = previousDelegate;
+    });
 
     group('MArray', () {
       test('length of new array', () {
@@ -251,8 +263,8 @@ void main() {
   });
 }
 
-MRoot testMRoot(Object from) => MRoot(
-      data: fleeceEncode(from),
+MRoot testMRoot(Object from) => MRoot.fromData(
+      fleeceEncode(from),
       context: MContext(),
       isMutable: true,
     );

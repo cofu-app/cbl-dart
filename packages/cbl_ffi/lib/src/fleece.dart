@@ -377,6 +377,19 @@ class SlotBindings extends Bindings {
 
 class FLDoc extends Opaque {}
 
+typedef CBLDart_FLDoc_FromResultData_C = Pointer<FLDoc> Function(
+  FLSliceResult data,
+  Uint8 trust,
+  Pointer<Void> sharedKeys,
+  FLSlice externalData,
+);
+typedef CBLDart_FLDoc_FromResultData = Pointer<FLDoc> Function(
+  FLSliceResult data,
+  int trust,
+  Pointer<Void> sharedKeys,
+  FLSlice externalData,
+);
+
 typedef CBLDart_FLDoc_FromJSON = Pointer<FLDoc> Function(
   FLString json,
   Pointer<Uint32> errorOut,
@@ -395,6 +408,10 @@ typedef FLDoc_GetRoot = Pointer<FLValue> Function(Pointer<FLDoc> doc);
 
 class DocBindings extends Bindings {
   DocBindings(Bindings parent) : super(parent) {
+    _fromResultData = libs.cblDart.lookupFunction<
+        CBLDart_FLDoc_FromResultData_C, CBLDart_FLDoc_FromResultData>(
+      'CBLDart_FLDoc_FromResultData',
+    );
     _fromJSON = libs.cblDart
         .lookupFunction<CBLDart_FLDoc_FromJSON, CBLDart_FLDoc_FromJSON>(
       'CBLDart_FLDoc_FromJSON',
@@ -408,9 +425,22 @@ class DocBindings extends Bindings {
     );
   }
 
+  late final CBLDart_FLDoc_FromResultData _fromResultData;
   late final CBLDart_FLDoc_FromJSON _fromJSON;
   late final CBLDart_FLDoc_BindToDartObject _bindToDartObject;
   late final FLDoc_GetRoot _getRoot;
+
+  Pointer<FLDoc>? fromResultData(
+    FLSliceResult data,
+    FLTrust trust,
+  ) {
+    return _fromResultData(
+      data,
+      trust.toInt(),
+      nullptr,
+      nullFLSlice.ref,
+    ).toNullable();
+  }
 
   Pointer<FLDoc> fromJson(String json) {
     return stringTable.autoFree(() {
