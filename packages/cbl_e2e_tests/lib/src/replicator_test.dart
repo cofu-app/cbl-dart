@@ -72,7 +72,8 @@ void main() {
       await replicatorB.start();
 
       final timestamp = DateTime.now().microsecondsSinceEpoch;
-      final doc = MutableDocument('continuouslyReplicatedDoc-$timestamp');
+      final doc =
+          MutableDocument.withId('continuouslyReplicatedDoc-$timestamp');
 
       final stream = dbB.watchAllIds().shareReplay();
 
@@ -124,8 +125,7 @@ void main() {
       final dbA = await openTestDb('ReplicationWithChannels-DB-A');
       final dbB = await openTestDb('ReplicationWithChannels-DB-B');
 
-      final docA = await dbA.saveDocument(
-          MutableDocument()..properties.addAll({'channels': 'A'}));
+      final docA = await dbA.saveDocument(MutableDocument({'channels': 'A'}));
       await dbA.saveDocument(MutableDocument());
 
       final replicatorA = await dbA.createTestReplicator(

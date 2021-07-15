@@ -6,6 +6,8 @@ import 'package:cbl_ffi/cbl_ffi.dart' as ffi;
 import 'package:logging/logging.dart';
 
 import 'blob.dart';
+import 'document/common.dart';
+import 'fleece/integration/integration.dart';
 import 'fleece.dart';
 import 'streams.dart';
 import 'utils.dart';
@@ -224,6 +226,8 @@ class CouchbaseLite {
     CBLBindings.initInstance(ffiLibraries);
 
     SlotSetter.register(blobSlotSetter);
+
+    MDelegate.instance = CblMDelegate();
 
     _workerFactory = CblWorkerFactory(libraries: ffiLibraries);
   }

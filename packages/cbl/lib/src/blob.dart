@@ -1,3 +1,5 @@
+// ignore_for_file: comment_references
+
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:typed_data';
@@ -5,7 +7,6 @@ import 'dart:typed_data';
 import 'package:cbl_ffi/cbl_ffi.dart';
 
 import 'database.dart';
-import 'document.dart';
 import 'fleece.dart';
 import 'native_object.dart';
 import 'resource.dart';

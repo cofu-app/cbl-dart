@@ -31,14 +31,14 @@ extension DatabaseUtilsExtension on Database {
   Stream<String> getAllIds() => query(N1QLQuery('SELECT META().id'))
       .then((query) => query.execute())
       .asStream()
-      .expand((resultSet) => resultSet.map((result) => result[0].asString!));
+      .expand((resultSet) => resultSet.map((result) => result[0] as String));
 
   /// Returns a stream which emits the ids of all the documents in the
   /// database when they change.
   Stream<List<String>> watchAllIds() => query(N1QLQuery('SELECT META().id'))
       .asStream()
       .asyncExpand((q) => q.changes())
-      .map((resultSet) => resultSet.map((rs) => rs[0].asString!).toList());
+      .map((resultSet) => resultSet.map((rs) => rs[0] as String).toList());
 
   /// Deletes all documents in this database and returns whether any documents
   /// where deleted.

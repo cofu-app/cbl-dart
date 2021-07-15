@@ -89,6 +89,31 @@ abstract class Fragment
   Fragment operator [](Object indexOrKey);
 }
 
+/// Provides read and write access to data value.
+///
+/// [MutableFragment] also provides subscript access by either key or index to
+/// the nested values which are wrapped by [MutableFragment] objects.
+abstract class MutableFragment
+    implements
+        Fragment,
+        MutableFragmentInterface,
+        MutableArrayFragment,
+        MutableDictionaryFragment {
+  MutableFragment operator [](Object indexOrKey);
+}
+
+/// Provides access to a [Document].
+///
+/// [DocumentFragment] also provides subscript access by either key to
+/// the data values of the document which are wrapped by Fragment objects.
+abstract class DocumentFragment implements DictionaryFragment {
+  /// Whether the document exists in the database or not.
+  bool get exists;
+
+  /// The [Document] wrapped by this fragment.
+  Document? get document;
+}
+
 class FragmentImpl implements Fragment {
   FragmentImpl._empty();
 
@@ -234,19 +259,6 @@ class FragmentImpl implements Fragment {
   }
 }
 
-/// Provides read and write access to data value.
-///
-/// [MutableFragment] also provides subscript access by either key or index to
-/// the nested values which are wrapped by [MutableFragment] objects.
-abstract class MutableFragment
-    implements
-        Fragment,
-        MutableFragmentInterface,
-        MutableArrayFragment,
-        MutableDictionaryFragment {
-  MutableFragment operator [](Object indexOrKey);
-}
-
 class MutableFragmentImpl extends FragmentImpl implements MutableFragment {
   MutableFragmentImpl._empty() : super._empty();
 
@@ -353,18 +365,6 @@ class MutableFragmentImpl extends FragmentImpl implements MutableFragment {
   @override
   MutableFragment operator [](final Object indexOrKey) =>
       _updateSubscript(indexOrKey) ? this : _emptyInstance;
-}
-
-/// Provides access to a [Document].
-///
-/// [DocumentFragment] also provides subscript access by either key to
-/// the data values of the document which are wrapped by Fragment objects.
-abstract class DocumentFragment implements DictionaryFragment {
-  /// Whether the document exists in the database or not.
-  bool get exists;
-
-  /// The [Document] wrapped by this fragment.
-  Document? get document;
 }
 
 class DocumentFragmentImpl implements DocumentFragment {

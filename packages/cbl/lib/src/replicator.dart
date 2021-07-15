@@ -6,7 +6,7 @@ import 'package:cbl_ffi/cbl_ffi.dart';
 import 'package:collection/collection.dart';
 
 import 'database.dart';
-import 'document.dart';
+import 'document/document.dart';
 import 'errors.dart';
 import 'fleece.dart';
 import 'native_callback.dart';
@@ -201,8 +201,8 @@ typedef ReplicationFilter = FutureOr<bool> Function(
 NativeCallback _wrapReplicationFilter(ReplicationFilter filter) =>
     NativeCallback((arguments, result) async {
       final message = ReplicationFilterCallbackMessage.fromArguments(arguments);
-      final doc = createDocument(
-        pointer: message.document,
+      final doc = DocumentImpl(
+        doc: message.document,
         retain: true,
         debugCreator: 'ReplicationFilter()',
       );
@@ -249,14 +249,14 @@ NativeCallback _wrapConflictResolver(ConflictResolver filter) =>
       final message =
           ReplicationConflictResolverCallbackMessage.fromArguments(arguments);
 
-      final local = message.localDocument?.let((it) => createDocument(
-            pointer: it,
+      final local = message.localDocument?.let((it) => DocumentImpl(
+            doc: it,
             retain: true,
             debugCreator: 'ConflictResolver(local)',
           ));
 
-      final remote = message.remoteDocument?.let((it) => createDocument(
-            pointer: it,
+      final remote = message.remoteDocument?.let((it) => DocumentImpl(
+            doc: it,
             retain: true,
             debugCreator: 'ConflictResolver(remote)',
           ));
@@ -265,9 +265,16 @@ NativeCallback _wrapConflictResolver(ConflictResolver filter) =>
       // TODO: throw on the native side when resolver throws
       // Also review whether other callbacks can be aborted.
       try {
-        resolved = await filter(message.documentId, local, remote);
+        resolved = await filter(
+          message.documentId,
+          local,
+          remote,
+        ) as DocumentImpl?;
+        if (resolved is MutableDocumentImpl) {
+          resolved.flushProperties();
+        }
       } finally {
-        final resolvedPointer = resolved?.native.pointerUnsafe;
+        final resolvedPointer = resolved?.doc.pointerUnsafe;
 
         // If the resolver returned a document other than `local` or `remote`,
         // the ref count of `resolved` needs to be incremented because the

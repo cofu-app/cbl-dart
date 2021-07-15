@@ -11,18 +11,30 @@ import 'value.dart';
 class MDict extends MCollection {
   MDict()
       : _dict = null,
+        _values = {},
         _length = 0,
-        _valuesHasAllKeys = true,
-        super(null, isMutable: true);
+        _valuesHasAllKeys = true;
 
-  MDict.fromMValue(MValue slot, MCollection parent)
+  MDict.asCopy(MDict original, {bool? isMutable})
+      : _dict = original._dict,
+        _values = Map.of(original._values),
+        _length = original._length,
+        _valuesHasAllKeys = original._valuesHasAllKeys,
+        super.asCopy(original, isMutable: isMutable ?? original.isMutable);
+
+  MDict.asChild(MValue slot, MCollection parent, {bool? isMutable})
       : _dict = (slot.value as CollectionFLValue).value.cast(),
+        _values = {},
         _length = (slot.value as CollectionFLValue).length,
         _valuesHasAllKeys = false,
-        super.withParent(slot, parent, isMutable: parent.hasMutableChildren);
+        super.asChild(
+          slot,
+          parent,
+          isMutable: isMutable ?? parent.hasMutableChildren,
+        );
 
   final Pointer<FLDict>? _dict;
-  final Map<String, MValue> _values = {};
+  final Map<String, MValue> _values;
   int _length;
 
   /// Whether [_values] contains all the keys of [_dict].

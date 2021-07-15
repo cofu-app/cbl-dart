@@ -1,13 +1,8 @@
 #pragma once
 
-#ifdef __APPLE__
-#include <CouchbaseLite/Fleece.h>
-#else
-#include "fleece/Fleece.h"
-#endif
-
 #include "cbldart_export.h"
 #include "dart/dart_api_dl.h"
+#include "fleece/Fleece.h"
 
 extern "C" {
 // Slice -------------------------------------------------------------------
@@ -67,6 +62,11 @@ CBLDART_EXPORT
 void CBLDart_FLSliceResult_Release(CBLDart_FLSliceResult slice);
 
 // Doc ---------------------------------------------------------------------
+
+CBLDART_EXPORT
+FLDoc CBLDart_FLDoc_FromResultData(CBLDart_FLSliceResult data, uint8_t trust,
+                                   FLSharedKeys sharedKeys,
+                                   CBLDart_FLSlice externalData);
 
 CBLDART_EXPORT
 FLDoc CBLDart_FLDoc_FromJSON(CBLDart_FLString json, FLError *errorOut);

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:cbl/cbl.dart';
+import 'package:cbl/cbl.dart' show FleeceErrorCode, FleeceException;
+import 'package:cbl/src/fleece.dart';
 
 import '../test_binding_impl.dart';
 import 'test_binding.dart';

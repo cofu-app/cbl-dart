@@ -44,23 +44,22 @@ class _MyAppState extends State<MyApp> {
 
     query
         .changes()
-        .map((resultSet) => resultSet.asDicts
-            .map((result) => result['post'].asDict!.toObject())
+        .map((resultSet) => resultSet.asDictionaries
+            .map((result) => result['post'].dictionary!.toMap())
             .toList())
         .listen((posts) => setState(() => _posts = posts));
   }
 
   void _createPost() async {
-    final post = MutableDocument()
-      ..properties.addAll({
-        'type': 'post',
-        'title': 'The first post',
-        'content': 'Here is some content for this post.',
-        'tags': ['couchbase-late', 'flutter', 'dart'],
-        'author': {
-          'name': 'Gabriel',
-        },
-      });
+    final post = MutableDocument({
+      'type': 'post',
+      'title': 'The first post',
+      'content': 'Here is some content for this post.',
+      'tags': ['couchbase-late', 'flutter', 'dart'],
+      'author': {
+        'name': 'Gabriel',
+      },
+    });
 
     await _db.saveDocument(post);
   }
@@ -69,7 +68,7 @@ class _MyAppState extends State<MyApp> {
     final ids = await _db
         .query(N1QLQuery('SELECT META.id'))
         .then((q) => q.execute())
-        .then((rs) => rs.map((r) => r[0].asString!).toList());
+        .then((rs) => rs.map((r) => r[0] as String).toList());
 
     await _db.beginBatch();
     try {

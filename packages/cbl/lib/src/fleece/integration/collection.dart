@@ -5,15 +5,23 @@ import 'context.dart';
 import 'value.dart';
 
 abstract class MCollection {
-  MCollection(
-    MContext? context, {
-    required bool isMutable,
+  MCollection({
+    MContext? context,
+    bool isMutable = true,
   })  : _context = context,
         _isMutable = isMutable,
         _hasMutableChildren = isMutable,
         _isMutated = true;
 
-  MCollection.withParent(
+  MCollection.asCopy(
+    MCollection original, {
+    required bool isMutable,
+  })  : _context = original.context,
+        _isMutable = isMutable,
+        _hasMutableChildren = isMutable,
+        _isMutated = true;
+
+  MCollection.asChild(
     MValue slot,
     MCollection parent, {
     required bool isMutable,

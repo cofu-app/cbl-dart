@@ -23,18 +23,17 @@ Future<void> main() async {
 
   // To create a new document start with an empty [MutableDocument] and fill
   // its properties.
-  final doc = MutableDocument()
-    ..properties.addAll({
-      'type': 'message',
-      'body': 'Heyo',
-      'from': 'Alice',
-    });
+  final doc = MutableDocument({
+    'type': 'message',
+    'body': 'Heyo',
+    'from': 'Alice',
+  });
 
   // Saving a document will return an immutable [Document].
   final savedDoc = await db.saveDocument(doc);
 
   print(savedDoc);
-  print(savedDoc.properties);
+  print(savedDoc.toMap());
 
   await db.close();
 }

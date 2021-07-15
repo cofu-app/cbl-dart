@@ -83,12 +83,11 @@ Future<void> openDatabase() async {
       config: DatabaseConfiguration(directory: documentsDir.path),
   )
 
-  final doc = MutableDocument()
-    ..properties.addAll({
-      'type': 'message',
-      'body': 'Heyo',
-      'from': 'Alice',
-    });
+  final doc = MutableDocument({
+    'type': 'message',
+    'body': 'Heyo',
+    'from': 'Alice',
+  });
 
   final savedDoc = await db.saveDocument(doc)
 }

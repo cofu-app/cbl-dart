@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:characters/characters.dart';
 
 extension ValueExt<T> on T {
-  R let<R>(R Function(T) f) => f(this);
-  T also(void Function(T) f) {
+  R let<R>(R Function(T it) f) => f(this);
+  T also(void Function(T it) f) {
     f(this);
     return this;
   }
