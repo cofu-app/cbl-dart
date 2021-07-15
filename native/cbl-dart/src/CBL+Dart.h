@@ -220,6 +220,12 @@ CBLListenerToken *CBLDart_CBLQuery_AddChangeListener(CBLQuery *query,
 // -- Blob
 
 CBLDART_EXPORT
+CBLDart_FLString CBLDart_CBLBlob_Digest(CBLBlob *blob);
+
+CBLDART_EXPORT
+CBLDart_FLString CBLDart_CBLBlob_ContentType(CBLBlob *blob);
+
+CBLDART_EXPORT
 uint64_t CBLDart_CBLBlobReader_Read(CBLBlobReadStream *stream, void *buf,
                                     uint64_t bufSize, CBLError *outError);
 

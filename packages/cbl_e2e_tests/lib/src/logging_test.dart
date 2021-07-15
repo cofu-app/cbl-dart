@@ -25,7 +25,7 @@ void main() {
         expect(
           CouchbaseLite.logMessages().map((it) => it.message),
           emitsThrough(
-            matches('litecore::SQLiteDataFile.+LogCallback.+\.cblite2'),
+            matches('SQLiteDataFile.+LogCallback.+\.cblite2'),
           ),
         );
 

@@ -365,3 +365,8 @@ uint8_t CBLDart_FLEncoder_BeginDict(FLEncoder encoder, uint64_t reserveCount) {
 uint8_t CBLDart_FLEncoder_WriteKey(FLEncoder encoder, CBLDart_FLString key) {
   return FLEncoder_WriteKey(encoder, CBLDart_FLStringFromDart(key));
 }
+
+CBLDart_FLSliceResult CBLDart_FLEncoder_Finish(FLEncoder encoder,
+                                               FLError *errorOut) {
+  return CBLDart_FLSliceResultToDart(FLEncoder_Finish(encoder, errorOut));
+}

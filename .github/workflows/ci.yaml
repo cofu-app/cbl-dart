@@ -65,30 +65,6 @@ jobs:
       - name: Analyze code
         run: melos run analyze
 
-  build-binaries-android:
-    name: Build - Binaries - Android
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1
-        with:
-          key: build-binaries-android
-
-      - name: Build
-        run: |
-          ./native/tools/build_android.sh build
-          tar -czf binaries-android.tar.gz -C build/android/lib .
-
-      - name: Upload binaries
-        uses: actions/upload-artifact@v2
-        with:
-          name: binaries-android
-          path: binaries-android.tar.gz
-
   tests-cbl:
     name: Tests - cbl
     runs-on: ubuntu-20.04
@@ -360,3 +336,49 @@ jobs:
 
       - name: Run tests
         run: melos run test:flutter:macos
+
+  tests-flutter-android:
+    name: Tests - Flutter - Android
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: test-flutter-android
+
+      - name: Build
+        run: ./native/tools/build_android.sh build Debug
+
+      - name: Cache Dart dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.pub-cache
+          key: dart-pub-cache-${{ hashFiles('**/pubspec.yaml') }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            dart-pub-cache-${{ hashFiles('**/pubspec.yaml') }}
+            dart-pub-cache
+
+      - name: Setup Dart environment
+        env:
+          SKIP_MELOS_BOOTSTRAP: true
+        uses: ./.github/actions/setup-dart-env
+
+      - name: Prepare flutter projects
+        run: melos run flutter:prepare
+
+      - name: Start test Couchbase cluster
+        run: melos run test:setupCouchbaseClusterMacOS
+
+      - name: Run tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 21
+          script: |
+            # Start port forwarding of Sync Gateway to emulator
+            adb reverse tcp:4984 tcp:4984
+
+            melos run test:flutter:android

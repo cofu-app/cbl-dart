@@ -21,9 +21,9 @@ typedef FLDict_GetBlob = Pointer<CBLBlob> Function(Pointer<FLDict> dict);
 typedef CBLBlob_Length_C = Uint64 Function(Pointer<CBLBlob> blob);
 typedef CBLBlob_Length = int Function(Pointer<CBLBlob> blob);
 
-typedef CBLBlob_Digest = FLString Function(Pointer<CBLBlob> blob);
+typedef CBLDart_CBLBlob_Digest = FLString Function(Pointer<CBLBlob> blob);
 
-typedef CBLBlob_ContentType = FLString Function(Pointer<CBLBlob> blob);
+typedef CBLDart_CBLBlob_ContentType = FLString Function(Pointer<CBLBlob> blob);
 
 typedef CBLBlob_Properties = Pointer<FLDict> Function(Pointer<CBLBlob> blob);
 
@@ -47,12 +47,13 @@ class BlobBindings extends Bindings {
     _length = libs.cbl.lookupFunction<CBLBlob_Length_C, CBLBlob_Length>(
       'CBLBlob_Length',
     );
-    _digest = libs.cbl.lookupFunction<CBLBlob_Digest, CBLBlob_Digest>(
-      'CBLBlob_Digest',
+    _digest = libs.cblDart
+        .lookupFunction<CBLDart_CBLBlob_Digest, CBLDart_CBLBlob_Digest>(
+      'CBLDart_CBLBlob_Digest',
     );
-    _contentType =
-        libs.cbl.lookupFunction<CBLBlob_ContentType, CBLBlob_ContentType>(
-      'CBLBlob_ContentType',
+    _contentType = libs.cblDart.lookupFunction<CBLDart_CBLBlob_ContentType,
+        CBLDart_CBLBlob_ContentType>(
+      'CBLDart_CBLBlob_ContentType',
     );
     _properties =
         libs.cbl.lookupFunction<CBLBlob_Properties, CBLBlob_Properties>(
@@ -67,8 +68,8 @@ class BlobBindings extends Bindings {
   late final FLDict_GetBlob _getBlob;
   late final FLSlot_SetBlob _setBlob;
   late final CBLBlob_Length _length;
-  late final CBLBlob_Digest _digest;
-  late final CBLBlob_ContentType _contentType;
+  late final CBLDart_CBLBlob_Digest _digest;
+  late final CBLDart_CBLBlob_ContentType _contentType;
   late final CBLBlob_Properties _properties;
 
   bool isBlob(Pointer<FLDict> dict) {

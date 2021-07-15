@@ -42,6 +42,25 @@
       "cwd": "packages/cbl_native",
       "request": "launch",
       "type": "dart"
+    },
+    {
+      "name": "cbl_e2e_tests_standalone_dart (gdb)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "/usr/lib/dart/bin/dart",
+      "args": ["test", "-j", "1", "-r", "expanded"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/packages/cbl_e2e_tests_standalone_dart",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
     }
   ]
 }

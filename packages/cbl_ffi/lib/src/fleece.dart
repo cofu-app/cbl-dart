@@ -1534,11 +1534,11 @@ typedef CBLDart_FLEncoder_WriteKey = int Function(
 typedef FLEncoder_EndDict_C = Uint8 Function(Pointer<FLEncoder> encoder);
 typedef FLEncoder_EndDict = int Function(Pointer<FLEncoder> encoder);
 
-typedef FLEncoder_Finish_C = FLSliceResult Function(
+typedef CBLDart_FLEncoder_Finish_C = FLSliceResult Function(
   Pointer<FLEncoder> encoder,
   Pointer<Uint32> errorOut,
 );
-typedef FLEncoder_Finish = FLSliceResult Function(
+typedef CBLDart_FLEncoder_Finish = FLSliceResult Function(
   Pointer<FLEncoder> encoder,
   Pointer<Uint32> errorOut,
 );
@@ -1617,8 +1617,9 @@ class FleeceEncoderBindings extends Bindings {
     _endDict = libs.cbl.lookupFunction<FLEncoder_EndDict_C, FLEncoder_EndDict>(
       'FLEncoder_EndDict',
     );
-    _finish = libs.cbl.lookupFunction<FLEncoder_Finish_C, FLEncoder_Finish>(
-      'FLEncoder_Finish',
+    _finish = libs.cblDart
+        .lookupFunction<CBLDart_FLEncoder_Finish_C, CBLDart_FLEncoder_Finish>(
+      'CBLDart_FLEncoder_Finish',
     );
     __getError =
         libs.cbl.lookupFunction<FLEncoder_GetError_C, FLEncoder_GetError>(
@@ -1646,7 +1647,7 @@ class FleeceEncoderBindings extends Bindings {
   late final CBLDart_FLEncoder_BeginDict _beginDict;
   late final CBLDart_FLEncoder_WriteKey _writeKey;
   late final FLEncoder_EndDict _endDict;
-  late final FLEncoder_Finish _finish;
+  late final CBLDart_FLEncoder_Finish _finish;
   late final FLEncoder_GetError __getError;
   late final FLEncoder_GetErrorMessage __getErrorMessage;
 
