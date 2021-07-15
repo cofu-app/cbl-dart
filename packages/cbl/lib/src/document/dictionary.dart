@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
-import '../fleece/fleece.dart';
+import '../fleece/encoder.dart';
 import '../fleece/integration/integration.dart';
 import 'array.dart';
 import 'blob.dart';
@@ -88,8 +88,7 @@ abstract class DictionaryInterface implements DictionaryFragment {
 
 /// Provides readonly access to dictionary data.
 @immutable
-abstract class Dictionary
-    implements DictionaryInterface, Iterable<MapEntry<String, Object?>> {
+abstract class Dictionary implements DictionaryInterface, Iterable<String> {
   /// Returns a mutable copy of this dictionary.
   MutableDictionary toMutable();
 }
@@ -166,7 +165,7 @@ abstract class MutableDictionary
 }
 
 class DictionaryImpl
-    with IterableMixin<MapEntry<String, Object?>>
+    with IterableMixin<String>
     implements Dictionary, MCollectionWrapper, FleeceEncodable {
   DictionaryImpl(this._dict);
 
@@ -176,7 +175,9 @@ class DictionaryImpl
   int get length => _dict.length;
 
   @override
-  List<String> get keys => _dict.iterable.map((entry) => entry.key).toList();
+  List<String> get keys => toList();
+
+  Iterable<Object?> get _values => map(value);
 
   T? _getAs<T>(String key) => coerceObject(_dict.get(key)?.asNative(_dict));
 
@@ -232,22 +233,23 @@ class DictionaryImpl
   void encodeTo(FleeceEncoder encoder) => _dict.encodeTo(encoder);
 
   @override
-  Iterator<MapEntry<String, Object?>> get iterator => _dict.iterable
-      .map((entry) => MapEntry(
-            entry.key,
-            entry.value.asNative(_dict),
-          ))
-      .iterator;
+  Iterator<String> get iterator =>
+      _dict.iterable.map((entry) => entry.key).iterator;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is DictionaryImpl &&
           runtimeType == other.runtimeType &&
-          const DeepCollectionEquality().equals(this, other);
+          // Compare the keys.
+          const IterableEquality<String>().equals(this, other) &&
+          // Compare the values.
+          const IterableEquality<Object?>().equals(_values, other._values);
 
   @override
-  int get hashCode => const DeepCollectionEquality().hash(this);
+  int get hashCode =>
+      const IterableEquality<String>().hash(this) ^
+      const IterableEquality<Object?>().hash(_values);
 }
 
 class MutableDictionaryImpl extends DictionaryImpl

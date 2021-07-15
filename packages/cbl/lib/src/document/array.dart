@@ -108,7 +108,7 @@ abstract class MutableArrayInterface
 
   /// Sets a [value] [at] the given index.
   ///
-  /// {@template cbl.MutableArray.allowedValueTypes}
+  /// {@macro cbl.MutableArray.allowedValueTypes}
   ///
   /// {@template cbl.MutableArrayInterface.setter}
   /// Throws a [RangeError] if the index is ouf of range.
@@ -164,7 +164,7 @@ abstract class MutableArrayInterface
 
   /// Adds a [value] at the end of this array.
   ///
-  /// {@template cbl.MutableArray.allowedValueTypes}
+  /// {@macro cbl.MutableArray.allowedValueTypes}
   void addValue(Object? value);
 
   /// Adds a [String] at the end of this array.
@@ -198,7 +198,7 @@ abstract class MutableArrayInterface
 
   /// Inserst a [value] [at] the given index.
   ///
-  /// {@template cbl.MutableArray.allowedValueTypes}
+  /// {@macro cbl.MutableArray.allowedValueTypes}
   ///
   /// {@template cbl.MutableArrayInterface.inserter}
   /// Throws a [RangeError] if the index is ouf of range.
@@ -374,10 +374,10 @@ class ArrayImpl
       identical(this, other) ||
       other is ArrayImpl &&
           runtimeType == other.runtimeType &&
-          const DeepCollectionEquality().equals(this, other);
+          const IterableEquality<Object?>().equals(this, other);
 
   @override
-  int get hashCode => const DeepCollectionEquality().hash(this);
+  int get hashCode => const IterableEquality<Object?>().hash(this);
 }
 
 class MutableArrayImpl extends ArrayImpl implements MutableArray {

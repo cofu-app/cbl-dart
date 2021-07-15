@@ -2,7 +2,8 @@ import 'dart:typed_data';
 
 import 'package:cbl_ffi/cbl_ffi.dart';
 
-import '../fleece/fleece.dart';
+import '../fleece/decoder.dart';
+import '../fleece/encoder.dart';
 import '../fleece/integration/integration.dart';
 import 'array.dart';
 import 'blob.dart';
@@ -108,7 +109,7 @@ bool valueWouldChange(
     return true;
   }
 
-  return newValue == oldValue?.asNative(container);
+  return newValue != oldValue?.asNative(container);
 }
 
 Object? toPrimitiveObject(Object? object) {
@@ -116,9 +117,9 @@ Object? toPrimitiveObject(Object? object) {
     return object.map(toPrimitiveObject).toList();
   }
   if (object is Dictionary) {
-    return Map.fromEntries(object.map((entry) => MapEntry(
-          entry.key,
-          toPrimitiveObject(entry.value),
+    return Map.fromEntries(object.map((key) => MapEntry(
+          key,
+          toPrimitiveObject(object.value(key)),
         )));
   }
   return object;

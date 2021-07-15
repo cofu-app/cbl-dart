@@ -40,19 +40,15 @@ final _blobContentTypeProperty = 'content_type';
 abstract class Blob {
   /// Creates a [Blob] with the given in-memory data.
   factory Blob.fromData(String contentType, Uint8List data) =>
-      NewBlobImpl(contentType, Stream.value(data));
+      throw UnimplementedError();
 
   /// Creates a [Blob] with the given stream of data.
   factory Blob.fromStream(String contentType, Stream<Uint8List> stream) =>
-      NewBlobImpl(contentType, stream);
+      throw UnimplementedError();
 
   /// Creates a [Blob] with the contents of a file.
-  factory Blob.fromFileUrl(String contentType, Uri url) => NewBlobImpl(
-        contentType,
-        Stream.value(File.fromUri(url))
-            .asyncExpand((file) => file.openRead())
-            .cast(),
-      );
+  factory Blob.fromFileUrl(String contentType, Uri url) =>
+      throw UnimplementedError();
 
   /// Gets the contents of this [Blob] as a block of memory.
   ///
@@ -95,55 +91,6 @@ abstract class Blob {
     }
     return true;
   }
-}
-
-// ignore: must_be_immutable
-class NewBlobImpl implements Blob, FleeceEncodable {
-  NewBlobImpl(this.contentType, this.stream);
-
-  @override
-  final String contentType;
-
-  final Stream<Uint8List> stream;
-
-  Future<Uint8List>? _loadedContent;
-
-  @override
-  Future<Uint8List> content() =>
-      _loadedContent ??= Future(() => _dataStreamToFuture(stream));
-
-  @override
-  Stream<Uint8List> contentStream() => _loadedContent?.asStream() ?? stream;
-
-  @override
-  int get length {
-    throw StateError('The length of a new Blob is not available.');
-  }
-
-  @override
-  String get digest {
-    throw StateError('The digest of a new Blob is not available.');
-  }
-
-  @override
-  Map<String, dynamic> get properties {
-    throw StateError('The properties of a new Blob are not available.');
-  }
-
-  @override
-  void encodeTo(FleeceEncoder encoder) {
-    // TODO
-    throw UnimplementedError();
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BlobImpl &&
-          const DeepCollectionEquality().equals(properties, other.properties);
-
-  @override
-  int get hashCode => const DeepCollectionEquality().hash(properties);
 }
 
 class BlobImpl implements Blob, FleeceEncodable {

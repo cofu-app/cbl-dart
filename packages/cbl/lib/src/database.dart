@@ -6,7 +6,7 @@ import 'package:cbl_ffi/cbl_ffi.dart';
 import 'couchbase_lite.dart';
 import 'document/document.dart';
 import 'errors.dart';
-import 'fleece.dart';
+import 'fleece/fleece.dart' as fl;
 import 'native_callback.dart';
 import 'native_object.dart';
 import 'query.dart';
@@ -724,7 +724,7 @@ class DatabaseImpl extends NativeResource<WorkerObject<CBLDatabase>>
   @override
   Future<List<String>> indexNames() async => use(() => native
       .execute((pointer) => GetDatabaseIndexNames(pointer))
-      .then((result) => Array.fromPointer(
+      .then((result) => fl.Array.fromPointer(
             result.pointer,
             release: true,
             retain: false,

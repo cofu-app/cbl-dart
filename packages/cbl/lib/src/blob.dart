@@ -7,7 +7,7 @@ import 'dart:typed_data';
 import 'package:cbl_ffi/cbl_ffi.dart';
 
 import 'database.dart';
-import 'fleece.dart';
+import 'fleece/containers.dart';
 import 'native_object.dart';
 import 'resource.dart';
 import 'streams.dart';

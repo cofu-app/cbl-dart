@@ -280,7 +280,7 @@ void main() {
       final replicator = await db.createTestReplicator();
       final doc = await db.saveDocument(MutableDocument());
       final pendingDocumentIds = await replicator.pendingDocumentIds();
-      expect(pendingDocumentIds.toObject(), {doc.id: true});
+      expect(pendingDocumentIds, {doc.id: true});
     });
 
     test('isDocumentPending returns whether a document is waiting to be pushed',

@@ -8,7 +8,7 @@ import 'package:collection/collection.dart';
 import 'database.dart';
 import 'document/document.dart';
 import 'errors.dart';
-import 'fleece.dart';
+import 'fleece/fleece.dart' as fl;
 import 'native_callback.dart';
 import 'native_object.dart';
 import 'resource.dart';
@@ -54,11 +54,12 @@ Future<Replicator> createReplicator({
         config.proxy?.port,
         config.proxy?.username,
         config.proxy?.password,
-        config.headers?.let((it) => MutableDict(it).native.pointer.cast()),
+        config.headers?.let((it) => fl.MutableDict(it).native.pointer.cast()),
         config.pinnedServerCertificate,
         config.trustedRootCertificates,
-        config.channels?.let((it) => MutableArray(it).native.pointer.cast()),
-        config.documentIds?.let((it) => MutableArray(it).native.pointer.cast()),
+        config.channels?.let((it) => fl.MutableArray(it).native.pointer.cast()),
+        config.documentIds
+            ?.let((it) => fl.MutableArray(it).native.pointer.cast()),
         pushFilterCallback?.native.pointer,
         pullFilterCallback?.native.pointer,
         conflictResolverCallback?.native.pointer,
@@ -775,7 +776,7 @@ abstract class Replicator extends NativeResource<WorkerObject<CBLReplicator>>
   /// Documents that would never be pushed by this replicator, due to its
   /// configuration's [ReplicatorConfiguration.pushFilter] or
   /// [ReplicatorConfiguration.documentIds], are ignored.
-  Future<Dict> pendingDocumentIds();
+  Future<Map<String, bool>> pendingDocumentIds();
 
   /// Indicates whether the document with the given id has local changes that
   /// have not yet been pushed to the server by this replicator.
@@ -862,13 +863,13 @@ class ReplicatorImpl extends Replicator with ClosableResourceMixin {
       ).stream;
 
   @override
-  Future<Dict> pendingDocumentIds() => use(() => native
+  Future<Map<String, bool>> pendingDocumentIds() => use(() => native
       .execute((pointer) => GetReplicatorPendingDocumentIds(pointer))
-      .then((result) => Dict.fromPointer(
+      .then((result) => fl.Dict.fromPointer(
             result.pointer,
             release: true,
             retain: false,
-          )));
+          ).toObject().cast()));
 
   @override
   Future<bool> isDocumentPending(String id) => use(() =>

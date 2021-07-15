@@ -11,8 +11,8 @@ import 'document/array.dart';
 import 'document/blob.dart';
 import 'document/common.dart';
 import 'document/dictionary.dart';
+import 'fleece/fleece.dart' as fl;
 import 'fleece/integration/integration.dart';
-import 'fleece.dart' as fleece;
 import 'native_object.dart';
 import 'resource.dart';
 import 'streams.dart';
@@ -307,7 +307,7 @@ class QueryImpl extends NativeResource<WorkerObject<CBLQuery>>
   set parameters(Parameters value) => useSync(() => _parameters = value);
 
   void _flushParameters() {
-    final dict = fleece.MutableDict(parameters._data);
+    final dict = fl.MutableDict(parameters._data);
     runKeepAlive(() => _bindings.setParameters(
           native.pointer,
           dict.native.pointer.cast(),

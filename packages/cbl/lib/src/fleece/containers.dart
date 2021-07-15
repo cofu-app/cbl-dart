@@ -5,10 +5,10 @@ import 'dart:typed_data';
 import 'package:cbl_ffi/cbl_ffi.dart';
 import 'package:collection/collection.dart';
 
-import 'errors.dart';
-import 'fleece/slice.dart';
-import 'native_object.dart';
-import 'resource.dart';
+import '../errors.dart';
+import 'slice.dart';
+import '../native_object.dart';
+import '../resource.dart';
 
 /// Options for how values are copied.
 enum CopyFlag {

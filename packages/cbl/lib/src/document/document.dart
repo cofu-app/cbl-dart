@@ -4,7 +4,7 @@ import 'dart:ffi';
 import 'package:cbl_ffi/cbl_ffi.dart';
 import 'package:meta/meta.dart';
 
-import '../fleece.dart' as fl;
+import '../fleece/containers.dart' as fl;
 import '../fleece/integration/integration.dart';
 import '../native_object.dart';
 import '../resource.dart';
@@ -20,8 +20,7 @@ late final _mutableDocumentBindings = CBLBindings.instance.mutableDocument;
 ///
 /// The [Document] is immutable.
 @immutable
-abstract class Document
-    implements DictionaryInterface, Iterable<MapEntry<String, Object?>> {
+abstract class Document implements DictionaryInterface, Iterable<String> {
   /// The document’s id.
   String get id;
 
@@ -76,9 +75,7 @@ class DocumentMContext extends MContext {
   final DocumentImpl document;
 }
 
-class DocumentImpl
-    with IterableMixin<MapEntry<String, Object?>>
-    implements Document {
+class DocumentImpl with IterableMixin<String> implements Document {
   DocumentImpl({
     required Pointer<CBLDocument> doc,
     required bool retain,
@@ -170,7 +167,7 @@ class DocumentImpl
       );
 
   @override
-  Iterator<MapEntry<String, Object?>> get iterator => _properties.iterator;
+  Iterator<String> get iterator => _properties.iterator;
 
   @override
   bool operator ==(Object other) =>
