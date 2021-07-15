@@ -8,7 +8,7 @@ import 'dict.dart';
 import 'value.dart';
 
 abstract class MDelegate {
-  static late MDelegate instance;
+  static MDelegate? instance;
 
   MCollection? collectionFromNative(Object? native);
 

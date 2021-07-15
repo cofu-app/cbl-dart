@@ -10,7 +10,19 @@ void main() {
   setupTestBinding();
 
   group('Fleece Integration', () {
-    setUpAll(() => MDelegate.instance = SimpleMDelegate());
+    // The previous delegate needs to be restored because
+    // `CouchbaseLite.initialize` is only called once for all tests, which is
+    // where the MDelegate implementation for CouchbaseList is set up.
+    MDelegate? previousDelegate;
+
+    setUpAll(() {
+      previousDelegate = MDelegate.instance;
+      MDelegate.instance = SimpleMDelegate();
+    });
+
+    tearDownAll(() {
+      MDelegate.instance = previousDelegate;
+    });
 
     group('MArray', () {
       test('length of new array', () {
